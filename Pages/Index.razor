@@ -1,0 +1,23 @@
+﻿@page "/"
+
+<PageTitle>Veggy - Home</PageTitle>
+
+<h2>Processing Status</h2>
+
+<StatusProgress />
+
+<StatusCommunity />
+
+<br />
+
+<h2>Messages</h2>
+
+<CascadingValue Name="@nameof(Filter)" Value="@Filter">
+    <LogsList />
+</CascadingValue>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = nameof(Filter))]
+    public string? Filter { get; set; }
+}

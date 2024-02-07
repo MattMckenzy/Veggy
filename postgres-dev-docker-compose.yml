@@ -1,0 +1,30 @@
+version: '3.7'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: veggy-dev-postgres
+    hostname: postgres
+    command:
+      [
+        "postgres",
+        "-c",
+        "session_preload_libraries=auto_explain",
+        "-c",
+        "auto_explain.log_min_duration=5ms",
+        "-c",
+        "auto_explain.log_analyze=true",
+        "-c",
+        "track_activity_query_size=1048576"
+      ]
+    ports:
+      - "5433:5432"
+    env_file: ./postgres-dev.env
+    volumes:
+      - ~/Working/Veggy/Data:/var/lib/postgresql/data
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "4"

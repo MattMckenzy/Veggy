@@ -1,0 +1,40 @@
+﻿<nav class="navbar navbar-expand-lg navbar-toggleable-lg border-bottom box-shadow mb-3">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href=""><img src="favicon.ico" style="height:40px;" class="me-1" />Veggy</a>
+        <button class="navbar-toggler" type="button" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+            <ul class="navbar-nav flex-grow-1">
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                        <span class="fs-4 me-2 bi bi-house-door" aria-hidden="true"></span> Home
+                    </NavLink>
+                </li>                
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="communities">
+                        <span class="fs-4 me-2 bi bi-list" aria-hidden="true"></span> Communities
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="settings">
+                        <span class="fs-4 me-2 bi bi-gear" aria-hidden="true"></span> Settings
+                    </NavLink>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+@code {
+    bool collapseNavMenu = true;
+
+    string baseMenuClass = "navbar-collapse d-lg-inline-flex flex-lg-row-reverse";
+
+    string NavMenuCssClass => baseMenuClass + (collapseNavMenu ? " collapse" : "");
+
+    void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

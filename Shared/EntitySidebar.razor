@@ -1,0 +1,161 @@
+﻿<aside class="sidebar">
+    <div class="sticky-wrapper">
+        <div class="d-flex justify-content-between" style="padding-right: 25px;">
+            <h5>@Title</h5>
+            <div>
+                @if (CreateCallback.HasDelegate)
+                {
+                    <button class="btn btn-item-add d-inline-flex align-items-center rounded my-1 me-3 px-1 py-0" @onclick=@(async () => await CreateCallback.InvokeAsync()) title="@CreateTitle">
+                        <span class="oi oi-plus text-success"></span>
+                    </button>
+                }
+                @if(DeleteCallback.HasDelegate)
+                {
+                    <EntitySidebarDeleteButton 
+                        ItemKeys=@Items.Keys
+                        DeleteCallback=@DeleteCallback 
+                        DeleteTitle=@DeleteAllTitle />
+                }                
+            </div>
+        </div>
+        <nav class="sidebar-list" id="modulesList" aria-label="Modules List">
+            <ul class="list-unstyled mb-0 py-md-1">
+
+                @if(EntityListLevel == EntityListLevels.SuperCategory)
+                {
+                    <EntitySidebarSuperCategories
+                        Items=@Items
+                        Title=@Title 
+                        CurrentItem=@CurrentItem 
+                        DeleteCallback=@DeleteCallback 
+                        DeleteTitle=@DeleteTitle 
+                        LoadCallback=@LoadCallback />
+                }
+                else if (EntityListLevel == EntityListLevels.Category)
+                {
+                    <EntitySidebarCategories
+                        Items=@Items
+                        Title=@Title
+                        CurrentItem=@CurrentItem 
+                        DeleteCallback=@DeleteCallback 
+                        DeleteTitle=@DeleteTitle 
+                        LoadCallback=@LoadCallback />                    
+                }
+                else if (EntityListLevel == EntityListLevels.Entity)
+                {
+                    <EntitySidebarItems
+                        Items=@Items
+                        Title=@Title
+                        CurrentItem=@CurrentItem 
+                        DeleteCallback=@DeleteCallback 
+                        DeleteTitle=@DeleteTitle 
+                        LoadCallback=@LoadCallback />
+                }
+            </ul>
+        </nav>
+    </div>
+</aside>
+
+@code {
+    [Parameter]
+    public required string Title { get; set; } = null!;
+
+    [Parameter]
+    public required Dictionary<(string SuperCategory, string Category, string Key), string> Items { get; set; } = null!;
+
+    [Parameter]
+    public (string SuperCategory, string Category, string Key) CurrentItem { get; set; }
+
+    [Parameter]
+    public EventCallback<IEnumerable<(string SuperCategory, string Category, string Key)>> DeleteCallback { get; set; }
+
+    [Parameter]
+    public string DeleteTitle { get; set; } = string.Empty;
+
+    [Parameter]
+    public string DeleteAllTitle { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback CreateCallback { get; set; }
+
+    [Parameter]
+    public string CreateTitle { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<(string SuperCategory, string Category, string Key)> LoadCallback { get; set; }
+
+    [Parameter]
+    public EntityListLevels EntityListLevel { get; set; } = EntityListLevels.SuperCategory;
+ 
+    [Inject]
+    public IJSRuntime JSRuntime { get; set; } = null!;
+
+    public override async Task SetParametersAsync(ParameterView parameters)
+    {
+        foreach (var parameter in parameters)
+        {
+            switch (parameter.Name)
+            {
+                case nameof(Title):
+                    Title = (string)parameter.Value;
+                    break;
+                case nameof(Items):
+                    bool itemsUpdated = Items != (Dictionary<(string SuperCategory, string Category, string Key), string>)parameter.Value;
+                    Items = (Dictionary<(string SuperCategory, string Category, string Key), string>)parameter.Value;
+                    if (itemsUpdated)
+                        await ItemsUpdated();                 
+                    break;
+                case nameof(CurrentItem):
+                    bool currentItemUpdated = CurrentItem != ((string SuperCategory, string Category, string Key)?)parameter.Value;
+                    CurrentItem = ((string SuperCategory, string Category, string Key))parameter.Value;
+                    if (currentItemUpdated)
+                        await CurrentItemUpdated();                 
+                    break;
+                case nameof(DeleteCallback):
+                    DeleteCallback = (EventCallback<IEnumerable<(string SuperCategory, string Category, string Key)>>)parameter.Value;
+                    break;
+                case nameof(DeleteTitle):
+                    DeleteTitle = (string)parameter.Value;
+                    break;
+                case nameof(DeleteAllTitle):
+                    DeleteAllTitle = (string)parameter.Value;
+                    break;
+                case nameof(CreateCallback):
+                    CreateCallback = (EventCallback)parameter.Value;
+                    break;
+                case nameof(CreateTitle):
+                    CreateTitle = (string)parameter.Value;
+                    break;
+                case nameof(LoadCallback):
+                    LoadCallback = (EventCallback<(string SuperCategory, string Category, string Key)>)parameter.Value;
+                    break;
+                case nameof(EntityListLevel):
+                    EntityListLevel = (EntityListLevels)parameter.Value;
+                    break;
+                default:
+                    throw new ArgumentException($"Unknown parameter: {parameter.Name}");
+            }
+        }
+
+        await base.SetParametersAsync(ParameterView.Empty);
+    }
+
+    private async Task ItemsUpdated()
+    {       
+        if (Items.DistinctBy(item => item.Key.SuperCategory).Count() == 1 && 
+            Items.DistinctBy(item => item.Key.Category).Count() == 1 &&
+            !string.IsNullOrWhiteSpace(Items.First().Key.SuperCategory) &&
+            !string.IsNullOrWhiteSpace(Items.First().Key.Category))
+            await JSRuntime.InvokeVoidAsync("expand", $"collapse-{(Items.First().Key.SuperCategory+Items.First().Key.Category).GetKey()}");  
+    }
+
+    private async Task CurrentItemUpdated()
+    {
+        if (!string.IsNullOrWhiteSpace(CurrentItem.SuperCategory) || !string.IsNullOrWhiteSpace(CurrentItem.Category))
+        {
+            KeyValuePair<(string SuperCategory, string Category, string Key), string>? item = Items.FirstOrDefault(keyValuePair => keyValuePair.Key == CurrentItem);
+            if (item.HasValue)
+                await JSRuntime.InvokeVoidAsync("expand", $"collapse-{(item.Value.Key.SuperCategory+item.Value.Key.Category).GetKey()}");  
+        }
+    }
+}

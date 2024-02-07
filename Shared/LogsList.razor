@@ -1,0 +1,39 @@
+﻿@if (IsLoading)
+{
+    <div class="w-100 my-auto d-flex align-items-center justify-content-center pt-3" style="height:50vh;">
+        <div class="spinner-border" role="status"></div>
+    </div>
+}
+
+<div class="container-fluid pt-3" hidden="@IsLoading">
+    <div class="row">
+        <div class="col mb-3">
+            <MultiSelect TEnum=LogLevel
+                Selected=@FilteredLogLevels 
+                Options=@(Enum.GetValues<LogLevel>().ToDictionary(logLevel => logLevel, logLevel => logLevel.ToString())) 
+                OnChange=FilterMessages 
+                NoneSelectedMessage="No Log Level Selected" />
+        </div>
+        <div class="col-auto mb-3 me-3 p-0">
+            <button class="btn btn-danger" @onclick=DeleteAllMessages disabled="@(!Messages.Any())">Delete All</button>
+        </div>
+    </div>
+</div>
+
+<div class="list-group w-100 pe-2 messages-container overflow-y-auto" hidden="@IsLoading">
+    <Virtualize Items=Messages Context="message">
+        <div class="list-group-item list-group-item-action @GetMessageStyle(message) flex-column align-items-start">
+            <div class="d-flex justify-content-between align-items-start w-100">
+                <p class="text-wrap text-break mb-1"><b>@message.Body</b></p>
+                <button class="btn btn-item-delete d-inline-flex align-items-center rounded ms-1 px-1 py-0 text-danger" 
+                    @onclick=@(async () => await DeleteMessage(message))>
+                    <span class="bi bi-x-lg"></span>
+                </button>
+            </div>
+            <div class="d-flex justify-content-between w-100">
+                <small><b>@GotifyService.GetLogLevel(message.Priority).ToString()</b></small>
+                <small>@message.Date</small>
+            </div>         
+        </div>
+    </Virtualize>
+</div>

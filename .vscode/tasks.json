@@ -1,0 +1,124 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/Veggy.sln",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "publish",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "publish",
+                "${workspaceFolder}/Veggy.sln",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "watch",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "watch",
+                "run",
+                "--project",
+                "${workspaceFolder}/Veggy.sln"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "type": "docker-build",
+            "label": "docker-build: debug",
+            "dependsOn": [
+                "build"
+            ],
+            "dockerBuild": {
+                "tag": "veggy:dev",
+                "target": "base",
+                "dockerfile": "${workspaceFolder}/Dockerfile",
+                "context": "${workspaceFolder}",
+                "pull": true,
+                "buildArgs":{
+                    "CONFIG": "Debug"
+                }
+            },
+            "netCore": {
+                "appProject": "${workspaceFolder}/Veggy.csproj"
+            }
+        },
+        {
+            "type": "docker-build",
+            "label": "docker-build: release",
+            "dependsOn": [
+                "build"
+            ],
+            "dockerBuild": {
+                "tag": "veggy:latest",
+                "dockerfile": "${workspaceFolder}/Dockerfile",
+                "context": "${workspaceFolder}",
+                "platform": {
+                    "os": "linux",
+                    "architecture": "amd64"
+                },
+                "pull": true,
+                "buildArgs":{
+                    "CONFIG": "Release"
+                }
+            },
+            "netCore": {
+                "appProject": "${workspaceFolder}/Veggy.csproj"
+            }
+        },
+        {
+            "type": "shell",
+            "label": "postgres-compose-up: dev",
+            "command": "docker compose -f \"${workspaceFolder}/postgres-dev-docker-compose.yml\" up -d"
+        },
+        {
+            "type": "shell",
+            "label": "postgres-compose-down: dev",
+            "command": "docker compose -f \"${workspaceFolder}/postgres-dev-docker-compose.yml\" down"
+        },
+        {
+            "type": "docker-run",
+            "label": "docker-run: debug",
+            "dependsOn": [
+                "docker-build: debug",
+                "postgres-compose-up: dev"
+            ],
+            "dockerRun": {
+                "env": {
+                    "ASPNETCORE_ENVIRONMENT": "Development",
+                    "ASPNETCORE_URLS": "http://+:80",
+                    "TZ": "America/Toronto"                    
+                }
+            },
+            "netCore": {
+                "appProject": "${workspaceFolder}/Veggy.csproj",
+                "enableDebugging": true
+            }
+        },
+        {
+            "type": "docker-run",
+            "label": "docker-run: release",
+            "dependsOn": [
+                "docker-build: release"
+            ],
+            "dockerRun": {},
+            "netCore": {
+                "appProject": "${workspaceFolder}/Veggy.csproj"
+            }
+        }
+    ]
+}

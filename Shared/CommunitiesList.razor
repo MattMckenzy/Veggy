@@ -1,0 +1,55 @@
+﻿<ModalPrompt @ref=ModalPromptReference></ModalPrompt>
+
+@if (IsLoading)
+{
+    <div class="w-100 my-auto d-flex align-items-center justify-content-center" style="height:50vh;">
+        <div class="spinner-border" role="status"></div>
+    </div>
+}
+
+<div class="entities-wrapper" hidden="@IsLoading">
+    
+    <CollectionControl 
+        OrderingFieldCallback=SelectCommunityOrder 
+        IsAscending=@IsAscending 
+        OrderingCallback=ToggleOrder 
+        SelectedOrderingField=@SelectedCommunityOrder
+        FilteringCallback=FilterCommunities 
+        FilterValues=@Filters         
+        IsUpdating=@IsUpdating />
+
+    <div class="entities">
+
+        @if (CommunitiesKeys != null)
+        {
+            <EntitySidebar Title="Communities"
+                Items=@CommunitiesKeys
+                CreateCallback=CreateCommunity
+                CreateTitle="Create Community"
+                DeleteCallback=DeleteCommunity
+                DeleteTitle="Delete Community"
+                DeleteAllTitle="Delete Shown Communities"
+                LoadCallback=LoadCommunity
+                CurrentItem=@((string.Empty, string.Empty, CurrentCommunity.Name))
+                EntityListLevel=@EntityListLevels.Entity>
+            </EntitySidebar>
+        } 
+
+        <div class="grid-main mb-3"> 
+            <div class="mb-3">
+                <label for="name" class="form-label">Name</label>
+                <input class="form-control enter-next @(CurrentCommunityKeyLocked ? "readonly disabled" : (string.IsNullOrWhiteSpace(NameFeedback) ? (CurrentCommunityIsDirty ? "is-valid" : string.Empty) : "is-invalid"))"
+                       type="text" id="name" value="@CurrentCommunity.Name" required=@(!CurrentCommunityKeyLocked) readonly=@CurrentCommunityKeyLocked disabled=@CurrentCommunityKeyLocked aria-describedby="nameFeedback"
+                       @onchange=@(async (ChangeEventArgs changeEventArgs) => await UpdateProperty(nameof(Community.Name), changeEventArgs.Value!)) />
+                <div id="nameFeedback" class="invalid-feedback">
+                    @NameFeedback
+                </div>
+            </div>    
+            <div>
+                <button id="saveButton" class="btn btn-success @(!CurrentCommunityIsValid || !CurrentCommunityIsDirty ? "disabled" : string.Empty)" @onclick="SaveCommunity" disabled="@(!CurrentCommunityIsValid || !CurrentCommunityIsDirty)">
+                    Save Community
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,36 @@
+﻿@page "/communities"
+
+<PageTitle>Veggy - Communities</PageTitle>
+
+<CascadingValue Name="@nameof(ItemKey)" Value="@ItemKey">
+    <CascadingValue Name="@nameof(Order)" Value="@Order">
+        <CascadingValue Name="@nameof(IsAscending)" Value="@IsAscending">
+            <CascadingValue Name="@nameof(Filters)" Value="@Filters">
+                <CascadingValue Name="@nameof(FromLink)" Value="@FromLink">
+                    <CommunitiesList />
+                </CascadingValue>
+            </CascadingValue>
+        </CascadingValue>
+    </CascadingValue>
+</CascadingValue>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = nameof(ItemKey))]
+    public string? ItemKey { get; set; }
+    [Parameter]
+    [SupplyParameterFromQuery(Name = nameof(Order))]
+    public string? Order { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = nameof(IsAscending))]
+    public string? IsAscending { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = nameof(Filters))]
+    public string? Filters { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = nameof(FromLink))]
+    public bool? FromLink { get; set; }
+}
