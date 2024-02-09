@@ -2,39 +2,43 @@ namespace Veggy.Extensions;
 
 public static class RestClientExtensions
 {
-    public async static Task<TResult?> GetWrapper<TResult>(this RestClient restClient, string resource, CancellationToken? cancellationToken = null) =>
-        await ExecuteRequest<TResult>(Method.Get, restClient, resource, cancellationToken);
+    public async static Task<TResult?> GetWrapper<TResult>(this RestClient restClient, string resource, IEnumerable<Parameter>? parameters = null, CancellationToken? cancellationToken = null) =>
+        await ExecuteRequest<TResult>(Method.Get, restClient, resource, parameters, cancellationToken);
 
-    public async static Task<TResult?> PostWrapper<T, TResult>(this RestClient restClient, string resource, T requestBodyObject, CancellationToken? cancellationToken = null) where T : class =>
-        await ExecuteRequest<T, TResult>(Method.Post, restClient, resource, requestBodyObject, cancellationToken);
+    public async static Task<TResult?> PostWrapper<T, TResult>(this RestClient restClient, string resource, T requestBodyObject, IEnumerable<Parameter>? parameters = null, CancellationToken? cancellationToken = null) where T : class =>
+        await ExecuteRequest<T, TResult>(Method.Post, restClient, resource, requestBodyObject, parameters, cancellationToken);
 
-    public async static Task<TResult?> PutWrapper<T, TResult>(this RestClient restClient, string resource, T requestBodyObject, CancellationToken? cancellationToken = null) where T : class =>
-        await ExecuteRequest<T, TResult>(Method.Put, restClient, resource, requestBodyObject, cancellationToken);
+    public async static Task<TResult?> PutWrapper<T, TResult>(this RestClient restClient, string resource, T requestBodyObject, IEnumerable<Parameter>? parameters = null, CancellationToken? cancellationToken = null) where T : class =>
+        await ExecuteRequest<T, TResult>(Method.Put, restClient, resource, requestBodyObject, parameters, cancellationToken);
 
-    public async static Task<TResult?> DeleteWrapper<TResult>(this RestClient restClient, string resource, CancellationToken? cancellationToken = null) =>
-        await ExecuteRequest<TResult>(Method.Delete, restClient, resource, cancellationToken);
+    public async static Task<TResult?> DeleteWrapper<TResult>(this RestClient restClient, string resource, IEnumerable<Parameter>? parameters = null, CancellationToken? cancellationToken = null) =>
+        await ExecuteRequest<TResult>(Method.Delete, restClient, resource, parameters, cancellationToken);
 
-    private async static Task<TResult?> ExecuteRequest<TResult>(Method method, RestClient restClient, string resource, CancellationToken? cancellationToken = null, bool reAuthenticated = false)
+    private async static Task<TResult?> ExecuteRequest<TResult>(Method method, RestClient restClient, string resource, IEnumerable<Parameter>? parameters = null, CancellationToken? cancellationToken = null, bool reAuthenticated = false)
     {
-        RestRequest restRequest = new() { Resource = resource };                
+        RestRequest restRequest = new() { Resource = resource };
+        if (parameters != null)
+            restRequest.AddOrUpdateParameters(parameters);
         RestResponse<TResult> restResponse = await restClient.ExecuteAsync<TResult>(restRequest, method, cancellationToken ?? CancellationToken.None);
 
         if (ProcessResponse(restClient, restRequest, restResponse,reAuthenticated))
             return restResponse.Data;
         else        
-            return await ExecuteRequest<TResult>(method, restClient, resource, cancellationToken, true);      
+            return await ExecuteRequest<TResult>(method, restClient, resource, parameters, cancellationToken, true);      
     }
 
-    private async static Task<TResult?> ExecuteRequest<T, TResult>(Method method, RestClient restClient, string resource, T requestBodyObject, CancellationToken? cancellationToken = null, bool reAuthenticated = false) where T: class
+    private async static Task<TResult?> ExecuteRequest<T, TResult>(Method method, RestClient restClient, string resource, T requestBodyObject, IEnumerable<Parameter>? parameters = null, CancellationToken? cancellationToken = null, bool reAuthenticated = false) where T: class
     {
         RestRequest restRequest = new() { Resource = resource };
         restRequest.AddJsonBody(requestBodyObject);
+        if (parameters != null)
+            restRequest.AddOrUpdateParameters(parameters);
         RestResponse<TResult> restResponse = await restClient.ExecuteAsync<TResult>(restRequest, method, cancellationToken ?? CancellationToken.None);        
                 
         if (ProcessResponse(restClient, restRequest, restResponse,reAuthenticated))
             return restResponse.Data;
         else        
-            return await ExecuteRequest<T, TResult>(method, restClient, resource, requestBodyObject, cancellationToken, true);      
+            return await ExecuteRequest<T, TResult>(method, restClient, resource, requestBodyObject, parameters, cancellationToken, true);      
     }
 
     private static bool ProcessResponse(RestClient restClient, RestRequest restRequest, RestResponse restResponse, bool reAuthenticated = false)

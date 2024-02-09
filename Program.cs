@@ -52,36 +52,46 @@ global using Veggy.Pages;
 global using Veggy.Shared;
 global using Veggy.Services;
 
-WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder webApplicationBuilder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
+webApplicationBuilder.Services.AddRazorPages();
+webApplicationBuilder.Services.AddServerSideBlazor();
 
-builder.Services.AddDbContextFactory<VeggyContext>();
+webApplicationBuilder.Services.AddDbContextFactory<VeggyContext>();
 
-builder.Services.AddSingleton<LemmyService>();
-builder.Services.AddSingleton<GotifyService>();
-builder.Services.AddSingleton<StatusService>();
-builder.Services.AddScoped<StorageService>();
+webApplicationBuilder.Services.AddSingleton<LemmyService>();
+webApplicationBuilder.Services.AddSingleton<GotifyService>();
+webApplicationBuilder.Services.AddSingleton<StatusService>();
+webApplicationBuilder.Services.AddScoped<StorageService>();
+webApplicationBuilder.Services.AddHostedService<VeggyHostedService>();
 
-WebApplication? app = builder.Build();
+WebApplication webApplication = webApplicationBuilder.Build();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+using (IServiceScope scope = webApplication.Services.CreateAsyncScope())
 {
-    app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+    VeggyContext veggyContext = scope.ServiceProvider.GetRequiredService<VeggyContext>();
+    
+    veggyContext.Database.Migrate();
+    await veggyContext.Settings.PopulateDefaultsAsync();
 }
 
-app.UseHttpsRedirection();
+// Configure the HTTP request pipeline.
+if (!webApplication.Environment.IsDevelopment())
+{
+    webApplication.UseDeveloperExceptionPage();
+}
+else
+{
+    webApplication.UseExceptionHandler("/Error");
+}
 
-app.UseStaticFiles();
+webApplication.UseStaticFiles();
 
-app.UseRouting();
+webApplication.UseRouting();
 
-app.MapBlazorHub();
-app.MapFallbackToPage("/_Host");
+webApplication.MapControllers();
+webApplication.MapBlazorHub();
+webApplication.MapFallbackToPage("/_Host");
 
-app.Run(); 
+webApplication.Run(); 

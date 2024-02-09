@@ -102,7 +102,10 @@
                     "ASPNETCORE_ENVIRONMENT": "Development",
                     "ASPNETCORE_URLS": "http://+:80",
                     "TZ": "America/Toronto"                    
-                }
+                },
+                "envFiles": [
+                    "${workspaceFolder}/veggy-dev.env"
+                ]
             },
             "netCore": {
                 "appProject": "${workspaceFolder}/Veggy.csproj",

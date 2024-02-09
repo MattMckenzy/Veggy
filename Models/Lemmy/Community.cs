@@ -6,9 +6,20 @@ public class Community
     public int? Id { get; set; }
 
     [Key]
+    [JsonIgnore]
     public required string OriginUrl { get; set; }
 
-    public int? PostFetchCount { get; set; }
+    [JsonIgnore]
+    public required OriginType OriginType { get; set; }
+
+    [JsonIgnore]
+    public int? PostFetchDays { get; set; }
+
+    [JsonIgnore]
+    public bool? FetchComments { get; set; }
+
+    [JsonIgnore]
+    public int? RefreshCommentsDays { get; set; }
 
     [JsonPropertyName("name")]
     public required string Name { get; set; }
@@ -27,4 +38,5 @@ public class Community
 
     [JsonPropertyName("nsfw")]
     public bool IsNSFW { get; set; } = false;
+
 }

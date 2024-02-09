@@ -1,8 +1,8 @@
 namespace Veggy.Models.Lemmy;
 
-public class Authenticator(string baseUrl, string clientId, string clientSecret) : JwtAuthenticator("")
+public class Authenticator(Uri baseUri, string clientId, string clientSecret) : JwtAuthenticator("")
 {    
-    private string BaseUrl { get; } = baseUrl;
+    private Uri BaseUri { get; } = baseUri;
     private string ClientId { get; } = clientId;
     private string ClientSecret { get; } = clientSecret;
 
@@ -21,7 +21,7 @@ public class Authenticator(string baseUrl, string clientId, string clientSecret)
 
     private async Task<string> GetToken() 
     {
-        RestClientOptions options = new (BaseUrl);
+        RestClientOptions options = new (BaseUri);
         
         using RestClient client = new (options);
 

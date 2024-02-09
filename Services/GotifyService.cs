@@ -4,17 +4,17 @@ namespace Veggy.Services;
 
 public class GotifyService(IDbContextFactory<VeggyContext> veggyContextFactory, ILogger<GotifyService> logger): IDisposable
 {
-    private IDbContextFactory<VeggyContext> VeggyContextFactory { get; set; } = veggyContextFactory;
+    private IDbContextFactory<VeggyContext> VeggyContextFactory { get; } = veggyContextFactory;
 
-    private readonly ILogger<GotifyService> Logger = logger;
+    private ILogger<GotifyService> Logger { get; } = logger;
 
-    private readonly RestClient RestClient = new(new RestClientOptions
+    private RestClient RestClient { get; } = new(new RestClientOptions
     { 
         Authenticator = new Authenticator(veggyContextFactory.CreateDbContext().Settings.GetSettingAsync("GotifyAppToken").GetAwaiter().GetResult().Value),
         BaseUrl = new Uri(veggyContextFactory.CreateDbContext().Settings.GetSettingAsync("GotifyUri").GetAwaiter().GetResult().Value)
     });
 
-    private readonly Dictionary<int, Message> Messages = [];
+    private Dictionary<int, Message> Messages { get; } = [];
 
     private bool DisposedValue { get; set; }
 
@@ -24,6 +24,8 @@ public class GotifyService(IDbContextFactory<VeggyContext> veggyContextFactory, 
     {             
         try
         {  
+            Logger.Log(logLevel, "{Title}: {Body}", Title, Body);
+
             using VeggyContext veggyContext = await VeggyContextFactory.CreateDbContextAsync(cancellationToken);
 
             string logFilterTokensString = (await veggyContext.Settings.GetSettingAsync("LogFilterTokens", cancellationToken: cancellationToken)).Value;
@@ -57,7 +59,7 @@ public class GotifyService(IDbContextFactory<VeggyContext> veggyContextFactory, 
                 int configuredLogLevel = int.TryParse(gotifyLogLevelSetting.Value, out int parsedLogLevel) ? parsedLogLevel : Defaults.GotifyLogLevel;
 
                 if (configuredLogLevel <= (int)logLevel)
-                    await RestClient.PostWrapper<Message, string>("message", newMessage, cancellationToken);                
+                    await RestClient.PostWrapper<Message, string>("message", newMessage, cancellationToken: cancellationToken);                
             }
         }            
         catch (Exception exception) when (exception is OperationCanceledException || exception is TaskCanceledException)
@@ -124,7 +126,7 @@ public class GotifyService(IDbContextFactory<VeggyContext> veggyContextFactory, 
                 Setting gotifyAppIdSetting = await veggyContext.Settings.GetSettingAsync("GotifyAppId", cancellationToken);
                 int gotifyAppId = int.TryParse(gotifyAppIdSetting.Value, out int parsedGotifyAppId) ? parsedGotifyAppId : Defaults.GotifyAppId;
 
-                await RestClient.DeleteWrapper<string>($"application/{gotifyAppId}/message", cancellationToken);
+                await RestClient.DeleteWrapper<string>($"application/{gotifyAppId}/message", cancellationToken: cancellationToken);
             }
         }
         catch (CommunicationException communicationException)
@@ -156,7 +158,7 @@ public class GotifyService(IDbContextFactory<VeggyContext> veggyContextFactory, 
 
                 await RestClient.GetWrapper<PagedMessages>($"application/{gotifyAppId}/message");
 
-                return (await RestClient.GetWrapper<PagedMessages>("", cancellationToken))?.Messages ?? Messages.Values;
+                return (await RestClient.GetWrapper<PagedMessages>("", cancellationToken: cancellationToken))?.Messages ?? Messages.Values;
             }
             else
                 return Messages.Values;

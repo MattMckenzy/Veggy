@@ -1,7 +1,7 @@
 namespace Veggy.Models.Lemmy;
 
 public class Comment
-{
+{    
     [JsonPropertyName("content")]
     public required string Content { get; set; }
 
@@ -10,4 +10,10 @@ public class Comment
 
     [JsonPropertyName("parent_id")]
     public int? ParentId { get; set; }
+
+    [JsonPropertyName("published")]
+    public required DateTime DatePublished { get; set; }
+
+    [JsonPropertyName("updated")]
+    public DateTime? DateUpdated { get; set; }
 }

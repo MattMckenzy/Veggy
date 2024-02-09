@@ -1,21 +1,12 @@
 ﻿namespace Veggy.Models;
 
-public class VeggyContext : DbContext
+public class VeggyContext(IConfiguration configuration) : DbContext
 {
     public DbSet<Community> Communities { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<Setting> Settings { get; set; }
 
-    public required IConfiguration Configuration { get; set; }
-
-    public VeggyContext()
-    {
-
-    }
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-    }
+    public required IConfiguration Configuration { get; set; } = configuration;
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
